@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -81,14 +80,16 @@ func (c *Collector) processLocalMap(mapFilePath string) error {
 		fname = strings.ReplaceAll(fname, "webpack://", "")
 		fname = strings.ReplaceAll(fname, "://", "")
 		
+		// Normalize path separators for the current OS
+		fname = filepath.FromSlash(fname)
+		
 		// Clean and validate the path to ensure it stays within output directory
 		fname = filepath.Clean(fname)
 		if filepath.IsAbs(fname) {
-			fname = strings.TrimPrefix(fname, "/")
-			fname = strings.TrimPrefix(fname, "\\")
+			fname = strings.TrimLeft(fname, "/\\")
 		}
 		
-		fname = path.Join(c.Output, baseName, fname)
+		fname = filepath.Join(c.Output, baseName, fname)
 
 		if i >= len(m.Contents) {
 			return errors.New("sources array is longer than sourcesContent array")
@@ -98,7 +99,7 @@ func (c *Collector) processLocalMap(mapFilePath string) error {
 			continue
 		}
 
-		parent, _ := path.Split(fname)
+		parent := filepath.Dir(fname)
 		err = os.MkdirAll(parent, 0770)
 		if err != nil {
 			return fmt.Errorf("create dir: %v", err)
