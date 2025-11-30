@@ -46,7 +46,7 @@ func findMapFiles(dir string) ([]string, error) {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && strings.HasSuffix(fpath, ".map") {
+		if !info.IsDir() && strings.HasSuffix(fpath, ".js.map") {
 			mapFiles = append(mapFiles, fpath)
 		}
 		return nil
@@ -75,13 +75,23 @@ func (c *Collector) processLocalMap(mapFilePath string) error {
 	}
 
 	for i, fname := range m.FileNames {
-		fname = strings.ReplaceAll(fname, "../", ".")
+		// Sanitize the filename to prevent directory traversal attacks
+		fname = strings.ReplaceAll(fname, "../", "")
+		fname = strings.ReplaceAll(fname, "..\\", "")
 		fname = strings.ReplaceAll(fname, "webpack://", "")
 		fname = strings.ReplaceAll(fname, "://", "")
+		
+		// Clean and validate the path to ensure it stays within output directory
+		fname = filepath.Clean(fname)
+		if filepath.IsAbs(fname) {
+			fname = strings.TrimPrefix(fname, "/")
+			fname = strings.TrimPrefix(fname, "\\")
+		}
+		
 		fname = path.Join(c.Output, baseName, fname)
 
 		if i >= len(m.Contents) {
-			return errors.New("sources is longer than sourcesContent")
+			return errors.New("sources array is longer than sourcesContent array")
 		}
 		if strings.HasPrefix(fname, "external ") {
 			c.Logger.Warn("skipping external source", zap.String("file", fname))
