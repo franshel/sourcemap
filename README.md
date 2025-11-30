@@ -18,8 +18,20 @@ go build -o sourcemap .
 
 ## Use
 
+### URL mode (from stdin)
+
 Feed URLs into [stdin](https://en.wikipedia.org/wiki/Standard_streams#Standard_input_(stdin)):
 
 ```bash
 echo "https://orsinium.dev/" | ./sourcemap --output=./sources
 ```
+
+### Local directory mode
+
+Process `.js.map` files from a local directory:
+
+```bash
+./sourcemap --dir=/path/to/sourcemaps --output=./sources
+```
+
+This mode recursively scans the specified directory for `.js.map` files and extracts the original source code from them.

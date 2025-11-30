@@ -44,6 +44,7 @@ func main() {
 	// parse CLI arguments
 	flags := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	flags.StringVar(&collector.Output, "output", "sources", "directory where to write the results to")
+	flags.StringVar(&collector.InputDir, "dir", "", "directory containing .js and .js.map files (local mode)")
 	flags.IntVar(&collector.Workers, "workers", 20, "how many workers to start for each step")
 	flags.BoolVar(&collector.Debug, "debug", false, "show debug log messages")
 	err := flags.Parse(os.Args[1:])
@@ -74,6 +75,18 @@ func main() {
 
 	wg := sync.WaitGroup{}
 	collector.Init()
+
+	// Check if local directory mode is enabled
+	if collector.InputDir != "" {
+		collector.Logger.Info("running in local directory mode", zap.String("dir", collector.InputDir))
+		err = collector.RunLocal()
+		if err != nil {
+			collector.Logger.Error("local processing failed", zap.Error(err))
+		}
+		collector.Logger.Info("finished")
+		return
+	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
