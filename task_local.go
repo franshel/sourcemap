@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -74,6 +73,7 @@ func (c *Collector) processLocalMap(mapFilePath string) error {
 	}
 
 	for i, fname := range m.FileNames {
+		originalSource := fname
 		// Sanitize the filename to prevent directory traversal attacks
 		fname = strings.ReplaceAll(fname, "../", "")
 		fname = strings.ReplaceAll(fname, "..\\", "")
@@ -91,8 +91,10 @@ func (c *Collector) processLocalMap(mapFilePath string) error {
 		
 		fname = filepath.Join(c.Output, baseName, fname)
 
+		// Skip sources that don't have corresponding content
 		if i >= len(m.Contents) {
-			return errors.New("sources array is longer than sourcesContent array")
+			c.Logger.Debug("skipping source without content", zap.String("source", originalSource))
+			continue
 		}
 		if strings.HasPrefix(fname, "external ") {
 			c.Logger.Warn("skipping external source", zap.String("file", fname))
