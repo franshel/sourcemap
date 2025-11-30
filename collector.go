@@ -24,10 +24,11 @@ type SourceMap struct {
 }
 
 type Collector struct {
-	Logger  *zap.Logger
-	Output  string
-	Workers int
-	Debug   bool
+	Logger   *zap.Logger
+	Output   string
+	InputDir string
+	Workers  int
+	Debug    bool
 
 	pages chan *url.URL
 }
